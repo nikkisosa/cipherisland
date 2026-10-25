@@ -1,0 +1,94 @@
+/*
+ * Island themes. Set data-theme / data-accent on any element and every island token
+ * below it follows, so the real island and the settings preview share one definition.
+ * "classic" is the default set declared in tokens.css.
+ */
+
+[data-theme] {
+  /* Auto accent follows the theme's text color. Resolved on this element, so each theme
+     gets its own value. */
+  --accent: var(--island-fg);
+  --on-accent: var(--island-bg);
+  --island-ring: transparent;
+}
+
+[data-theme="classic"] {
+  --island-ring: transparent;
+}
+
+[data-theme="graphite"] {
+  --island-bg: #1c1c1e;
+  --island-fg: #f5f5f7;
+  --island-fg-muted: rgba(235, 235, 245, 0.62);
+  --island-fg-subtle: rgba(235, 235, 245, 0.32);
+  --island-fill: rgba(120, 120, 128, 0.4);
+  --island-fill-hover: rgba(120, 120, 128, 0.55);
+  --island-track: rgba(120, 120, 128, 0.5);
+  --island-ring: rgba(255, 255, 255, 0.14);
+  --island-shadow: 0 0 0 0.5px var(--island-ring), 0 8px 22px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="midnight"] {
+  --island-bg: #0a1020;
+  --island-fg: #e8eefc;
+  --island-fg-muted: rgba(200, 215, 255, 0.64);
+  --island-fg-subtle: rgba(200, 215, 255, 0.34);
+  --island-fill: rgba(110, 140, 220, 0.22);
+  --island-fill-hover: rgba(110, 140, 220, 0.34);
+  --island-track: rgba(110, 140, 220, 0.3);
+  --island-ring: rgba(122, 162, 255, 0.28);
+  --island-shadow: 0 0 0 0.5px var(--island-ring), 0 8px 22px rgba(2, 6, 18, 0.55), 0 1px 3px rgba(2, 6, 18, 0.6);
+}
+
+[data-theme="light"] {
+  --island-bg: #f5f5f7;
+  --island-fg: #1d1d1f;
+  --island-fg-muted: rgba(60, 60, 67, 0.7);
+  --island-fg-subtle: rgba(60, 60, 67, 0.42);
+  --island-fill: rgba(60, 60, 67, 0.12);
+  --island-fill-hover: rgba(60, 60, 67, 0.2);
+  --island-track: rgba(60, 60, 67, 0.2);
+  --island-ring: rgba(0, 0, 0, 0.1);
+  --island-shadow: 0 0 0 0.5px var(--island-ring), 0 8px 22px rgba(0, 0, 0, 0.28), 0 1px 3px rgba(0, 0, 0, 0.25);
+  /* Brighter status colors fail contrast on a light surface. */
+  --ok: #1f8f3a;
+  --warn: #9a6a00;
+  --danger: #d1281e;
+  --timer: #c46a00;
+  --tint-green: rgba(31, 143, 58, 0.16);
+  --tint-orange: rgba(196, 106, 0, 0.16);
+}
+
+/* Accent colors. Two attributes beat the one-attribute auto rule above. */
+[data-theme][data-accent="blue"] {
+  --accent: #0a84ff;
+  --on-accent: #fff;
+}
+[data-theme][data-accent="green"] {
+  --accent: #30d158;
+  --on-accent: #04210d;
+}
+[data-theme][data-accent="orange"] {
+  --accent: #ff9f0a;
+  --on-accent: #241500;
+}
+[data-theme][data-accent="pink"] {
+  --accent: #ff375f;
+  --on-accent: #fff;
+}
+[data-theme][data-accent="teal"] {
+  --accent: #40c8e0;
+  --on-accent: #02242b;
+}
+[data-theme="light"][data-accent="green"] {
+  --accent: #1f8f3a;
+  --on-accent: #fff;
+}
+[data-theme="light"][data-accent="orange"] {
+  --accent: #c46a00;
+  --on-accent: #fff;
+}
+[data-theme="light"][data-accent="teal"] {
+  --accent: #087f99;
+  --on-accent: #fff;
+}

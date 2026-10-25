@@ -1,0 +1,106 @@
+/* Design tokens. Components read roles, never raw values. */
+:root {
+  --font-ui: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+
+  /* Spacing (4px base) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* Type scale */
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-md: 13px;
+  --text-base: 14px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+  --text-display: 32px;
+
+  /* Motion */
+  --dur-fast: 100ms;
+  --dur-base: 160ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* Island surface: the Classic theme. Other themes override these in themes.css. */
+  --island-bg: #000;
+  --island-fg: #fff;
+  --island-fg-muted: rgba(235, 235, 245, 0.6);
+  --island-fg-subtle: rgba(235, 235, 245, 0.3);
+  --island-fill: rgba(120, 120, 128, 0.36);
+  --island-fill-hover: rgba(120, 120, 128, 0.5);
+  --island-track: rgba(120, 120, 128, 0.45);
+  --island-shadow: 0 6px 18px rgba(0, 0, 0, 0.38), 0 1px 3px rgba(0, 0, 0, 0.5);
+
+  /* Status colors on the island: always paired with text or an icon */
+  --ok: #30d158;
+  --warn: #ffd60a;
+  --tint-green: rgba(48, 209, 88, 0.22);
+  --tint-orange: rgba(255, 159, 10, 0.22);
+  --danger: #ff453a;
+  --timer: #ff9f0a;
+}
+
+/* Settings window: neutral ramp with one accent, light and dark. */
+:root {
+  --color-bg-app: #f2f2f7;
+  --color-bg-surface: #ffffff;
+  --color-bg-subtle: #e5e5ea;
+  --color-border-default: #d1d1d6;
+  --color-border-strong: #c7c7cc;
+  --color-text-default: #000000;
+  --color-text-muted: #6c6c70;
+  --color-action-primary: #007aff;
+  --color-switch-on: #34c759;
+  --color-action-primary-hover: #174fb0;
+  --color-action-on-primary: #ffffff;
+  --color-focus-ring: #1d5fd1;
+  --color-status-warning-bg: #fff4d6;
+  --color-status-warning-border: #e3b94a;
+  --color-status-warning-fg: #6b4a00;
+  --radius-control: 10px;
+  --radius-card: 12px;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg-app: #000000;
+    --color-bg-surface: #1c1c1e;
+    --color-bg-subtle: #2c2c2e;
+    --color-border-default: #38383a;
+    --color-border-strong: #48484a;
+    --color-text-default: #ffffff;
+    --color-text-muted: #98989f;
+    --color-action-primary: #0a84ff;
+    --color-switch-on: #30d158;
+    --color-action-primary-hover: #7bb0ff;
+    --color-action-on-primary: #08101f;
+    --color-focus-ring: #7bb0ff;
+    --color-status-warning-bg: #2d2610;
+    --color-status-warning-border: #6d5a1f;
+    --color-status-warning-fg: #f0d58a;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
