@@ -101,14 +101,14 @@ The native window is a fixed 420 x 290 transparent canvas, and the pill is drawn
 
 ## Releases
 
-`.github/workflows/release.yml` builds on a Windows runner and publishes a GitHub release when you push a tag:
+`.github/workflows/release.yml` builds on a Windows runner and publishes a GitHub release. There are two ways to start it:
 
-```bash
-git tag v0.1.0
-git push origin v0.1.0
-```
+- Push a tag: `git tag v0.1.0` then `git push origin v0.1.0`. The release uses that tag.
+- Run it by hand from the Actions tab. It publishes a release tagged `v<version>`, where `version` comes from `src-tauri/tauri.conf.json`. Untick "Publish a GitHub release" to build without publishing; the files are then kept as a build artifact.
 
-The release gets the NSIS installer, the MSI, a portable `CipherIsland_<version>_x64-portable.exe` and `SHA256SUMS.txt`. The workflow can also be run by hand from the Actions tab, which builds without publishing. Keep the tag in step with `version` in `src-tauri/tauri.conf.json`. The files aren't code-signed, so SmartScreen will warn on first run.
+The release gets the NSIS installer, the MSI, a portable `CipherIsland_<version>_x64-portable.exe`, a `CipherIsland_<version>_x64-portable.zip` with the same exe, and `SHA256SUMS.txt`. Bump `version` in `tauri.conf.json` before releasing again; a second run with the same version updates the existing release. The files aren't code-signed, so SmartScreen will warn on first run.
+
+If the publish step fails with a permissions error, open the repository's Settings, then Actions, then General, and set "Workflow permissions" to "Read and write permissions".
 
 ## Limits
 
