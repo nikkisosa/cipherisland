@@ -1,14 +1,23 @@
-import { useEffect, useId, useRef, useState, type ComponentType, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ComponentType, type CSSProperties, type ReactNode } from "react";
 import {
   inTauri,
   ipc,
   onEvent,
   type AccentId,
+  type IdleStyleId,
   type ActivitiesSettings,
   type MonitorOption,
+  type MotionId,
+  type NotchId,
+  type OpenWidthId,
+  type ShapeId,
+  type SurfaceId,
+  type TabStyleId,
   type Settings,
   type ThemeId,
 } from "../lib/ipc";
+import { accentStyle } from "../lib/appearance";
+import { PRESETS, activePreset, type Preset } from "../lib/presets";
 import { useSettings } from "../lib/settings";
 import {
   BatteryIcon,
@@ -18,6 +27,7 @@ import {
   ClipboardIcon,
   ArrowUpRightIcon,
   ClockIcon,
+  DropIcon,
   GearIcon,
   GridIcon,
   MusicIcon,
@@ -25,6 +35,7 @@ import {
   PauseIcon,
   PreviousIcon,
   SpeakerIcon,
+  StopwatchIcon,
   TimerIcon,
 } from "../components/Icons";
 
@@ -45,9 +56,64 @@ const THEMES: { id: ThemeId; label: string; note: string }[] = [
   { id: "graphite", label: "Graphite", note: "Soft charcoal" },
   { id: "midnight", label: "Midnight", note: "Deep blue" },
   { id: "light", label: "Light", note: "Bright surface" },
+  { id: "forest", label: "Forest", note: "Deep green" },
+  { id: "rose", label: "Rose", note: "Dark berry" },
+  { id: "sunset", label: "Sunset", note: "Warm amber" },
+  { id: "ocean", label: "Ocean", note: "Deep teal" },
+  { id: "violet", label: "Violet", note: "Dark purple" },
+  { id: "gold", label: "Gold", note: "Warm yellow" },
+];
+
+/** Selectable edge styles where the island meets the top of the screen. */
+const NOTCH_OPTIONS: { id: NotchId; label: string; note: string }[] = [
+  { id: "flat", label: "Flat", note: "Straight edge" },
+  { id: "flared", label: "Flared", note: "Curved shoulders" },
+];
+
+/** Selectable idle looks. */
+const IDLE_OPTIONS: { id: IdleStyleId; label: string; note: string }[] = [
+  { id: "plain", label: "Plain", note: "Just the pill" },
+  { id: "dot", label: "Dot", note: "Small accent light" },
+  { id: "glow", label: "Glow", note: "Soft accent halo" },
+  { id: "breathe", label: "Breathe", note: "Slow pulsing halo" },
+  { id: "aurora", label: "Aurora", note: "Drifting colored light" },
+];
+
+/** Selectable corner styles. */
+const SHAPE_OPTIONS: { id: ShapeId; label: string; note: string }[] = [
+  { id: "round", label: "Round", note: "Fully rounded" },
+  { id: "soft", label: "Soft", note: "Gentle corners" },
+  { id: "sharp", label: "Sharp", note: "Tight corners" },
+];
+
+/** Selectable island surfaces. */
+const SURFACE_OPTIONS: { id: SurfaceId; label: string; note: string }[] = [
+  { id: "solid", label: "Solid", note: "Opaque" },
+  { id: "glass", label: "Glass", note: "See-through" },
+  { id: "outline", label: "Outline", note: "Thin edge line" },
+];
+
+/** Selectable open widths. */
+const WIDTH_OPTIONS: { id: OpenWidthId; label: string; note: string }[] = [
+  { id: "narrow", label: "Narrow", note: "330 px" },
+  { id: "standard", label: "Standard", note: "370 px" },
+  { id: "wide", label: "Wide", note: "400 px" },
+];
+
+/** Selectable tab styles. */
+const TAB_OPTIONS: { id: TabStyleId; label: string; note: string }[] = [
+  { id: "icons", label: "Icons", note: "Icon per tab" },
+  { id: "labels", label: "Labels", note: "Name on the active tab" },
+  { id: "dots", label: "Dots", note: "Page dots" },
 ];
 
 /** Selectable accent colors; `swatch` is the CSS background of the color chip. */
+const MOTIONS: { id: MotionId; label: string; note: string }[] = [
+  { id: "bouncy", label: "Bouncy", note: "Overshoots, like a drop" },
+  { id: "smooth", label: "Smooth", note: "Gentle, no overshoot" },
+  { id: "snappy", label: "Snappy", note: "Quick and tight" },
+];
+
 const ACCENTS: { id: AccentId; label: string; swatch: string }[] = [
   { id: "auto", label: "Match theme", swatch: "linear-gradient(135deg, #fff 50%, #1d1d1f 50%)" },
   { id: "blue", label: "Blue", swatch: "#0a84ff" },
@@ -55,6 +121,9 @@ const ACCENTS: { id: AccentId; label: string; swatch: string }[] = [
   { id: "orange", label: "Orange", swatch: "#ff9f0a" },
   { id: "pink", label: "Pink", swatch: "#ff375f" },
   { id: "teal", label: "Teal", swatch: "#40c8e0" },
+  { id: "purple", label: "Purple", swatch: "#bf5af2" },
+  { id: "red", label: "Red", swatch: "#ff453a" },
+  { id: "yellow", label: "Yellow", swatch: "#ffd60a" },
 ];
 
 const WIDGETS: {
@@ -70,10 +139,12 @@ const WIDGETS: {
   { key: "timer", title: "Timer", description: "Start a countdown from the open island.", Icon: TimerIcon, hue: "#ff9f0a" },
   { key: "clock", title: "Clock", description: "Time and date in the open island.", Icon: ClockIcon, hue: "#8e8e93" },
   { key: "calendar", title: "Calendar", description: "Month view with today highlighted.", Icon: CalendarIcon, hue: "#ff453a" },
+  { key: "stopwatch", title: "Stopwatch", description: "Count up with laps. Keeps running while the island is closed.", Icon: StopwatchIcon, hue: "#32d4c0" },
+  { key: "hydration", title: "Water", description: "Count glasses of water today, with a ring toward eight.", Icon: DropIcon, hue: "#4da3ff" },
   { key: "systemStats", title: "System", description: "CPU and memory load, sampled only while open.", Icon: ChipIcon, hue: "#64d2ff" },
   { key: "clipboard", title: "Clipboard", description: "Preview copied text. Private content from password managers is skipped.", Icon: ClipboardIcon, hue: "#bf5af2" },
   { key: "notifications", title: "Notifications", description: "Mirror incoming toasts. Windows usually blocks this for unpackaged apps.", Icon: BellIcon, hue: "#ffd60a" },
-  { key: "quickActions", title: "Quick buttons", description: "Mute, screenshot, lock, Task Manager and settings under the open island.", Icon: GridIcon, hue: "#5e5ce6" },
+  { key: "quickActions", title: "Quick buttons", description: "Mute, keep awake, screenshot, desktop, files, emoji, lock, Task Manager and settings under the open island.", Icon: GridIcon, hue: "#5e5ce6" },
 ];
 
 /**
@@ -129,10 +200,18 @@ function Group({ title, children }: { title?: string; children: ReactNode }) {
   );
 }
 
-/** Miniature of the island, in compact and open form, drawn with the selected theme and accent. */
-function Preview({ theme, accent }: { theme: ThemeId; accent: AccentId }) {
+/** Miniature of the island, in compact and open form, drawn with the selected theme, accent, shape and surface. */
+function Preview({ theme, accent, custom, opacity, shape, surface }: { theme: ThemeId; accent: AccentId; custom: string; opacity: number; shape: ShapeId; surface: SurfaceId }) {
   return (
-    <div className="preview" data-theme={theme} data-accent={accent} aria-hidden="true">
+    <div
+      className="preview"
+      data-theme={theme}
+      data-accent={accent}
+      data-shape={shape}
+      data-surface={surface}
+      style={{ ...accentStyle(accent, custom), ["--island-alpha" as string]: opacity } as CSSProperties}
+      aria-hidden="true"
+    >
       <div className="pv-compact">
         <span className="pv-art">
           <MusicIcon size={12} />
@@ -168,14 +247,49 @@ function Preview({ theme, accent }: { theme: ThemeId; accent: AccentId }) {
   );
 }
 
+/**
+ * Grid of ready-made looks. Choosing one replaces every appearance setting at once.
+ *
+ * @param props.settings Current settings, used to mark the matching preset.
+ * @param props.onApply Called with the preset's values when a card is chosen.
+ */
+function PresetPicker({ settings, onApply }: { settings: Settings; onApply: (preset: Preset) => void }) {
+  const current = activePreset(settings);
+  return (
+    <div className="preset-grid" role="radiogroup" aria-label="Ready-made looks">
+      {PRESETS.map((p) => (
+        <label key={p.id} className="preset-card">
+          <input type="radio" name="preset" value={p.id} checked={current?.id === p.id} onChange={() => onApply(p)} />
+          <span
+            className="preset-swatch"
+            data-theme={p.values.theme}
+            data-accent={p.values.accent}
+            data-shape={p.values.shape}
+            data-surface={p.values.surface}
+            data-docked={p.values.attachTop}
+            style={accentStyle(p.values.accent, settings.accentCustom)}
+          >
+            <span className="preset-pill">
+              <i />
+              <b />
+            </span>
+          </span>
+          <span className="theme-label">{p.label}</span>
+          <span className="theme-note">{p.note}</span>
+        </label>
+      ))}
+    </div>
+  );
+}
+
 /** Radio group of theme cards, each previewing the theme with the current accent. */
-function ThemePicker({ value, accent, onChange }: { value: ThemeId; accent: AccentId; onChange: (t: ThemeId) => void }) {
+function ThemePicker({ value, accent, custom, onChange }: { value: ThemeId; accent: AccentId; custom: string; onChange: (t: ThemeId) => void }) {
   return (
     <div className="theme-grid" role="radiogroup" aria-label="Island theme">
       {THEMES.map((t) => (
         <label key={t.id} className="theme-card">
           <input type="radio" name="theme" value={t.id} checked={value === t.id} onChange={() => onChange(t.id)} />
-          <span className="theme-swatch" data-theme={t.id} data-accent={accent}>
+          <span className="theme-swatch" data-theme={t.id} data-accent={accent} style={accentStyle(accent, custom)}>
             <span className="theme-pill">
               <i />
               <i />
@@ -189,8 +303,56 @@ function ThemePicker({ value, accent, onChange }: { value: ThemeId; accent: Acce
   );
 }
 
+/**
+ * Segmented radio group for a small set of choices.
+ *
+ * @param props.name Radio group name, unique on the page.
+ * @param props.label Accessible name of the group.
+ * @param props.value Current choice.
+ * @param props.options Choices with a label and a short note.
+ * @param props.onChange Called with the chosen id.
+ * @param props.disabled Greys out the group and blocks changes.
+ */
+function SegmentedPicker<T extends string>({
+  name,
+  label,
+  value,
+  options,
+  onChange,
+  disabled = false,
+}: {
+  name: string;
+  label: string;
+  value: T;
+  options: { id: T; label: string; note: string }[];
+  onChange: (id: T) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="segmented" data-disabled={disabled} role="radiogroup" aria-label={label} style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
+      {options.map((o) => (
+        <label key={o.id} className="segment">
+          <input type="radio" name={name} value={o.id} checked={value === o.id} disabled={disabled} onChange={() => onChange(o.id)} />
+          <span className="segment-label">{o.label}</span>
+          <span className="segment-note">{o.note}</span>
+        </label>
+      ))}
+    </div>
+  );
+}
+
 /** Radio group of accent color chips. */
-function AccentPicker({ value, onChange }: { value: AccentId; onChange: (a: AccentId) => void }) {
+function AccentPicker({
+  value,
+  custom,
+  onChange,
+  onCustom,
+}: {
+  value: AccentId;
+  custom: string;
+  onChange: (a: AccentId) => void;
+  onCustom: (hex: string) => void;
+}) {
   return (
     <div className="accent-row" role="radiogroup" aria-label="Accent color">
       {ACCENTS.map((a) => (
@@ -200,6 +362,21 @@ function AccentPicker({ value, onChange }: { value: AccentId; onChange: (a: Acce
           <span className="sr-only">{a.label}</span>
         </label>
       ))}
+      <label className="accent-chip" title="Custom color">
+        <input type="radio" name="accent" value="custom" checked={value === "custom"} onChange={() => onChange("custom")} />
+        <span className="accent-dot accent-custom" style={{ background: custom }} />
+        <span className="sr-only">Custom color</span>
+      </label>
+      <input
+        className="color-input"
+        type="color"
+        value={custom}
+        aria-label="Pick a custom accent color"
+        onChange={(e) => {
+          onCustom(e.target.value);
+          if (value !== "custom") onChange("custom");
+        }}
+      />
     </div>
   );
 }
@@ -218,6 +395,7 @@ export function SettingsApp() {
   const [saved, setSaved] = useState(false);
   const saveTimer = useRef<number>();
   const offsetId = useId();
+  const opacityId = useId();
   const monitorId = useId();
 
   // The backend owns the settings; the tray and island menu can change them as well.
@@ -281,28 +459,106 @@ export function SettingsApp() {
 
         {page === "appearance" && (
           <>
-            <Preview theme={draft.theme} accent={draft.accent} />
+            <Group title="Ready-made looks">
+              <div className="pad">
+                <PresetPicker settings={draft} onApply={(p) => commit({ ...draft, ...p.values })} />
+              </div>
+            </Group>
+
+            <Preview theme={draft.theme} accent={draft.accent} custom={draft.accentCustom} opacity={draft.opacity} shape={draft.shape} surface={draft.surface} />
 
             <Group title="Theme">
               <div className="pad">
-                <ThemePicker value={draft.theme} accent={draft.accent} onChange={(theme) => commit({ ...draft, theme })} />
+                <ThemePicker value={draft.theme} accent={draft.accent} custom={draft.accentCustom} onChange={(theme) => commit({ ...draft, theme })} />
               </div>
             </Group>
 
             <Group title="Accent">
               <div className="pad accent-wrap">
-                <AccentPicker value={draft.accent} onChange={(accent) => commit({ ...draft, accent })} />
+                <AccentPicker
+                  value={draft.accent}
+                  custom={draft.accentCustom}
+                  onChange={(accent) => commit({ ...draft, accent })}
+                  onCustom={(accentCustom) => commit({ ...draft, accentCustom, accent: "custom" })}
+                />
                 <span className="row-desc">Used for progress bars, the volume slider and highlights.</span>
               </div>
+            </Group>
+
+            <Group title="Animation">
+              <div className="pad">
+                <SegmentedPicker name="motion" label="Animation style" value={draft.motion} options={MOTIONS} onChange={(motion) => commit({ ...draft, motion })} />
+              </div>
+            </Group>
+
+            <Group title="Design">
+              <div className="pad design-block">
+                <span className="row-title">Corners</span>
+                <SegmentedPicker name="shape" label="Corner style" value={draft.shape} options={SHAPE_OPTIONS} onChange={(shape) => commit({ ...draft, shape })} />
+              </div>
+              <div className="pad design-block">
+                <span className="row-title">Surface</span>
+                <SegmentedPicker name="surface" label="Island surface" value={draft.surface} options={SURFACE_OPTIONS} onChange={(surface) => commit({ ...draft, surface })} />
+              </div>
+              <div className="pad design-block">
+                <span className="row-title">Open width</span>
+                <SegmentedPicker name="openWidth" label="Open width" value={draft.openWidth} options={WIDTH_OPTIONS} onChange={(openWidth) => commit({ ...draft, openWidth })} />
+              </div>
+              <div className="pad design-block">
+                <span className="row-title">Tabs</span>
+                <SegmentedPicker name="tabStyle" label="Tab style" value={draft.tabStyle} options={TAB_OPTIONS} onChange={(tabStyle) => commit({ ...draft, tabStyle })} />
+              </div>
+            </Group>
+
+            <Group title="Transparency and idle look">
+              <div className="row">
+                <label className="row-text" htmlFor={opacityId}>
+                  <span className="row-title">Opacity</span>
+                  <span className="row-desc">Lower values let the screen behind show through. 100% is solid.</span>
+                </label>
+                <div className="offset">
+                  <input
+                    id={opacityId}
+                    type="range"
+                    min={40}
+                    max={100}
+                    step={5}
+                    value={draft.opacity}
+                    onChange={(e) => commit({ ...draft, opacity: Number(e.target.value) })}
+                  />
+                  <span className="num opacity-readout">{draft.opacity}%</span>
+                </div>
+              </div>
+              <div className="pad design-block">
+                <span className="row-title">When idle</span>
+                <SegmentedPicker name="idleStyle" label="Idle look" value={draft.idleStyle} options={IDLE_OPTIONS} onChange={(idleStyle) => commit({ ...draft, idleStyle })} />
+              </div>
+            </Group>
+
+            <Group title="Navigation">
+              <Switch
+                title="Arrows beside the open island"
+                description="Previous and next buttons on either side. You can also scroll the mouse wheel, or scroll sideways, over the open island to change tab."
+                checked={draft.sideButtons}
+                onChange={(sideButtons) => commit({ ...draft, sideButtons })}
+              />
             </Group>
 
             <Group title="Position">
               <Switch
                 title="Attach to top edge"
-                description="Sit flush against the top of the screen like a notch. Turn off to float below it."
+                description="Sit flush against the top of the screen like a notch. Turn off to float below it. The edge styles below apply only when attached."
                 checked={draft.attachTop}
                 onChange={(attachTop) => commit({ ...draft, attachTop })}
               />
+              <div className="pad design-block">
+                <span className="row-title">Edge when closed</span>
+                <SegmentedPicker name="notchClosed" label="Edge when closed" value={draft.notchClosed} options={NOTCH_OPTIONS} disabled={!draft.attachTop} onChange={(notchClosed) => commit({ ...draft, notchClosed })} />
+              </div>
+              <div className="pad design-block">
+                <span className="row-title">Edge when open</span>
+                <SegmentedPicker name="notchOpen" label="Edge when open" value={draft.notchOpen} options={NOTCH_OPTIONS} disabled={!draft.attachTop} onChange={(notchOpen) => commit({ ...draft, notchOpen })} />
+              </div>
               <div className="row" data-disabled={draft.attachTop}>
                 <label className="row-text" htmlFor={offsetId}>
                   <span className="row-title">Distance from the top</span>

@@ -2,7 +2,7 @@ import type { ComponentType } from "react";
 import type { Settings } from "../lib/ipc";
 
 /** Identifier of an activity module. */
-export type ActivityId = "volume" | "battery" | "notifications" | "timer" | "nowPlaying" | "clock" | "systemStats" | "clipboard" | "calendar";
+export type ActivityId = "volume" | "battery" | "notifications" | "timer" | "nowPlaying" | "clock" | "systemStats" | "clipboard" | "calendar" | "stopwatch" | "hydration";
 
 /**
  * Description of an activity for the current render.
@@ -18,14 +18,14 @@ export interface Activity {
   priority: number;
   live: boolean;
   available: boolean;
-  /** Height of the expanded body, excluding the tab strip. */
-  expandedHeight: number;
   Glyph: ComponentType<{ size?: number }>;
   Trailing: ComponentType;
   /** Optional text between glyph and value in the compact pill (e.g. the track title). */
   Title?: ComponentType;
   /** Compact pill width when this activity is primary and has a title. */
   compactWidth?: number;
+  /** Optional thin progress line along the bottom of the compact pill (renders nothing when idle). */
+  Progress?: ComponentType;
   Expanded: ComponentType;
 }
 

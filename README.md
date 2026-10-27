@@ -8,18 +8,20 @@ Hover it to open it. Click to keep it open. Move away, press Esc, or click elsew
 
 | Widget | What you get |
 | --- | --- |
-| Now playing | Title, artist, artwork, a seek bar, previous/play/next and a volume slider, for any app that reports to Windows media controls. The title scrolls in the closed pill while music plays. |
+| Now playing | Title, artist, artwork, a seek bar, previous/play/next and a volume slider, for any app that reports to Windows media controls. The cover's colors glow behind the player. The title scrolls in the closed pill while music plays. |
 | Volume | A level pill for a moment when the volume changes, plus a slider and mute button in the open island. |
 | Battery | A plug-in animation, and warnings at 20% and 10%. Only appears on machines with a battery. |
-| Timer | Pick a length (or a preset), start, pause. The remaining time shows in the closed pill. |
-| Clock and calendar | Time and date, and a month grid. The clock can also sit in the closed pill when nothing else is going on. |
-| System | CPU and memory load, sampled once a second and only while that tab is open. |
-| Clipboard | A short preview of text you just copied. Off by default. Anything a password manager marks as private is skipped. |
+| Timer | Pick a length (or a preset), start, pause. A Focus 25 + 5 button runs a 25 minute session and then a 5 minute break on its own. The remaining time shows in the closed pill. |
+| Clock and calendar | An analog clock with a sweeping second hand, the digital time and date (click the city chip to see another time zone), and a month grid. The clock can also sit in the closed pill when nothing else is going on. |
+| Stopwatch | Count up with laps. It keeps running in the closed pill, which shows the elapsed time. |
+| Water | Count glasses of water today with a ring toward eight. The count resets each day and shows briefly on the pill when it changes. |
+| System | CPU, memory, system drive usage and network download/upload rates, sampled once a second and only while that tab is open. |
+| Clipboard | A short preview of text you just copied, and a history of the last four. Click an entry to copy it again (entries of 400 characters or more can't be copied back).  Off by default. Anything a password manager marks as private is skipped. |
 | Notifications | Mirrors Windows toasts. Off by default, and usually blocked, see [Limits](#limits). |
 
-When more than one thing is happening, the most important one takes the pill and the next one gets a small circle beside it. Five round buttons (mute, screenshot, lock, Task Manager, settings) drop out under the island when it's open.
+When more than one thing is happening, the most important one takes the pill and the next one gets a small circle beside it. Nine round buttons (mute, keep awake, screenshot, show desktop, File Explorer, emoji picker, lock, Task Manager, settings) drop out under the island when it's open. Keep awake stops Windows from sleeping or turning off the display until you switch it off or quit.
 
-Four looks (Classic, Graphite, Midnight, Light) and six accent colors are in Settings, with a live preview.
+Settings opens with eight ready-made looks (Notch, Island, Graphite Pro, Midnight Glass, Light Studio, Sunset Float, Forest Minimal, Violet Neon) that set everything in one click. Below them you can fine-tune: ten themes (Classic, Graphite, Midnight, Light, Forest, Rose, Sunset, Ocean, Violet, Gold), nine accent colors plus a custom color picker, three animation styles, corner, surface, open-width and tab styles, an opacity slider an idle look (plain, dot, glow, breathe or aurora), and flat or flared shoulders where the docked island meets the top edge, chosen separately for the closed and open island. The preview shows most of these. The open island is the same size on every tab.
 
 ## Installing a release
 
@@ -61,7 +63,7 @@ The first run compiles the Rust side and takes a few minutes. After that, UI cha
 ## Using it
 
 - **Hover** to open, **click** to pin it open, **Esc** or a click outside to close. Esc isn't swallowed, so the app in front still gets it.
-- The tabs along the bottom switch widgets. A right-click on the open island gives Settings, Pause and Quit. The tray icon has the same three and works from the keyboard.
+- Scroll over the open island (mouse wheel, or sideways on a trackpad) or press the arrows beside it to move between widgets; panels slide left and right. The tabs along the bottom also switch widgets. A right-click on the open island gives Settings, Pause and Quit. The tray icon has the same three and works from the keyboard.
 - While it's closed, clicks go through to whatever is behind it, so it never blocks a title bar or a browser tab.
 - Over a web browser, hovering fades the island instead of opening it, so you can see the tabs. Hold **Ctrl** while hovering to open it anyway. Browsers it recognises: Chrome, Edge, Firefox, Brave, Opera, Vivaldi, Arc, Zen, Chromium, LibreWolf, Waterfox, Thorium. The list is in `src-tauri/src/behind.rs`.
 - It hides itself while a fullscreen app or game is in front on the same monitor.
@@ -91,7 +93,7 @@ A widget returns an `Activity` from `useActivity(settings)`: a priority, whether
 
 ## How the window works
 
-The native window is a fixed 420 x 290 transparent canvas, and the pill is drawn inside it. Only CSS and Framer Motion move; the window itself never resizes during an animation. Details worth knowing before you change anything:
+The native window is a fixed 500 x 290 transparent canvas, and the pill is drawn inside it. Only CSS and Framer Motion move; the window itself never resizes during an animation. Details worth knowing before you change anything:
 
 - **Placement.** Positions are worked out in physical pixels for the chosen monitor (centered on the monitor, flush with the top of its work area, or offset if docking is off). It re-places itself after display, DPI and taskbar changes.
 - **No focus, no Alt+Tab.** The window has `WS_EX_NOACTIVATE` and `WS_EX_TOOLWINDOW`. The windowing layer rewrites extended styles when it toggles things, so `enforce_styles()` puts them back after every show and on a 2 second heartbeat.

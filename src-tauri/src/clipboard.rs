@@ -9,12 +9,12 @@ use std::time::Duration;
 use serde::Serialize;
 use tauri::Emitter;
 use windows::core::w;
-use windows::Win32::Foundation::{HGLOBAL, HWND};
+use windows::Win32::Foundation::{GlobalFree, HGLOBAL, HWND};
 use windows::Win32::System::DataExchange::{
-    AddClipboardFormatListener, CloseClipboard, GetClipboardData, IsClipboardFormatAvailable,
-    OpenClipboard, RegisterClipboardFormatW,
+    AddClipboardFormatListener, CloseClipboard, EmptyClipboard, GetClipboardData, IsClipboardFormatAvailable,
+    OpenClipboard, RegisterClipboardFormatW, SetClipboardData,
 };
-use windows::Win32::System::Memory::{GlobalLock, GlobalUnlock};
+use windows::Win32::System::Memory::{GlobalAlloc, GlobalLock, GlobalUnlock, GMEM_MOVEABLE};
 
 /// Clipboard format id for UTF-16 text (`CF_UNICODETEXT`).
 const CF_UNICODETEXT: u32 = 13;
@@ -92,5 +92,42 @@ fn read_text() -> Option<String> {
         }
         let _ = CloseClipboard();
         out.filter(|s| !s.trim().is_empty())
+    }
+}
+
+/// Puts `text` on the clipboard as Unicode text, replacing its contents.
+///
+/// Used by the clipboard history to copy an earlier entry back. Returns `false` when the
+/// clipboard could not be opened or the text could not be stored.
+pub fn write_text(text: &str) -> bool {
+    let wide: Vec<u16> = text.encode_utf16().chain(std::iter::once(0)).collect();
+    unsafe {
+        let mut opened = false;
+        for _ in 0..8 {
+            if OpenClipboard(None).is_ok() {
+                opened = true;
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(25));
+        }
+        if !opened {
+            return false;
+        }
+        let _ = EmptyClipboard();
+        let mut stored = false;
+        if let Ok(mem) = GlobalAlloc(GMEM_MOVEABLE, wide.len() * 2) {
+            let p = GlobalLock(mem) as *mut u16;
+            if !p.is_null() {
+                std::ptr::copy_nonoverlapping(wide.as_ptr(), p, wide.len());
+                let _ = GlobalUnlock(mem);
+                // On success the system owns the memory; on failure it must be freed here.
+                stored = SetClipboardData(CF_UNICODETEXT, Some(windows::Win32::Foundation::HANDLE(mem.0))).is_ok();
+            }
+            if !stored {
+                let _ = GlobalFree(Some(mem));
+            }
+        }
+        let _ = CloseClipboard();
+        stored
     }
 }

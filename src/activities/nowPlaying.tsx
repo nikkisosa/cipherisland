@@ -29,9 +29,10 @@ interface ArtEvent {
 const PAUSE_LINGER_MS = 8000;
 
 /** Current media session, its artwork as a data URI, and when playback last stopped. */
-const store = createStore<{ media: MediaState | null; art: string | null; artKey: string; pausedAt: number }>({
+const store = createStore<{ media: MediaState | null; art: string | null; artKey: string; pausedAt: number; tint: string | null }>({
   media: null,
   art: null,
+  tint: null,
   artKey: "",
   pausedAt: 0,
 });
@@ -41,9 +42,52 @@ onEvent<MediaState>("media://state", (media) => {
   const wasPlaying = prev.media?.status === "playing";
   store.set({ ...prev, media, pausedAt: wasPlaying && media.status !== "playing" ? Date.now() : prev.pausedAt });
 });
-onEvent<ArtEvent>("media://art", (e) =>
-  store.set((s) => ({ ...s, artKey: e.key, art: e.data ? `data:${e.mime || "image/png"};base64,${e.data}` : null })),
-);
+/**
+ * Finds a vivid average color of an image, for the glow behind the player.
+ *
+ * Pixels are averaged on an 8 by 8 copy, weighted toward saturated ones so a mostly grey cover
+ * with a colored subject still gives that color.
+ *
+ * @param src Image URL or data URI.
+ * @param done Called with an `r, g, b` string, or `null` when the image cannot be read.
+ */
+function dominantColor(src: string, done: (rgb: string | null) => void) {
+  const img = new Image();
+  img.onload = () => {
+    try {
+      const c = document.createElement("canvas");
+      c.width = c.height = 8;
+      const ctx = c.getContext("2d", { willReadFrequently: true });
+      if (!ctx) return done(null);
+      ctx.drawImage(img, 0, 0, 8, 8);
+      const d = ctx.getImageData(0, 0, 8, 8).data;
+      let r = 0;
+      let g = 0;
+      let b = 0;
+      let w = 0;
+      for (let i = 0; i < d.length; i += 4) {
+        const max = Math.max(d[i], d[i + 1], d[i + 2]);
+        const min = Math.min(d[i], d[i + 1], d[i + 2]);
+        const weight = 0.15 + (max - min) / 255;
+        r += d[i] * weight;
+        g += d[i + 1] * weight;
+        b += d[i + 2] * weight;
+        w += weight;
+      }
+      done(`${Math.round(r / w)}, ${Math.round(g / w)}, ${Math.round(b / w)}`);
+    } catch {
+      done(null);
+    }
+  };
+  img.onerror = () => done(null);
+  img.src = src;
+}
+
+onEvent<ArtEvent>("media://art", (e) => {
+  const art = e.data ? `data:${e.mime || "image/png"};base64,${e.data}` : null;
+  store.set((s) => ({ ...s, artKey: e.key, art, tint: art ? s.tint : null }));
+  if (art) dominantColor(art, (tint) => store.set((s) => (s.art === art ? { ...s, tint } : s)));
+});
 
 /**
  * Estimates the current playback position.
@@ -98,7 +142,7 @@ function Bars() {
 
 /** Panel shown in the expanded island. Artwork, title, artist, seek bar, transport controls and volume. */
 function Expanded() {
-  const { media } = store.use();
+  const { media, tint } = store.use();
   const playing = media?.status === "playing";
   // Redraws the progress bar twice a second, only while this panel is mounted and playing.
   useTicker(playing, 500);
@@ -109,6 +153,7 @@ function Expanded() {
 
   return (
     <div className="panel panel-media">
+      <div className="media-aura" style={{ ["--aura" as string]: tint ?? "120, 120, 130" }} aria-hidden="true" />
       <div className="media-head">
         <Cover size={64} radius={14} />
         <div className="media-text">
@@ -169,6 +214,19 @@ function Expanded() {
   );
 }
 
+/** Thin line along the bottom of the compact pill showing the playback position. */
+function Progress() {
+  const { media } = store.use();
+  useTicker(media?.status === "playing", 1000);
+  if (!media || media.durationMs <= 0) return null;
+  const ratio = Math.min(1, positionNow(media) / media.durationMs);
+  return (
+    <span className="pill-progress" aria-hidden="true">
+      <i style={{ width: `${ratio * 100}%`, background: "var(--accent)" }} />
+    </span>
+  );
+}
+
 /** Now playing activity. Takes the pill while playing and for a few seconds after pausing. */
 export const nowPlaying: ActivityModule = {
   id: "nowPlaying",
@@ -183,11 +241,12 @@ export const nowPlaying: ActivityModule = {
       priority: 50,
       live,
       available: enabled,
-      expandedHeight: 188,
+
       Glyph,
       Trailing: Bars,
       Title: TrackTitle,
       compactWidth: 320,
+      Progress,
       Expanded,
     };
   },

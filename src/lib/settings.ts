@@ -13,6 +13,17 @@ export const defaultSettings: Settings = {
   attachTop: true,
   theme: "classic",
   accent: "auto",
+  motion: "bouncy",
+  shape: "round",
+  surface: "solid",
+  openWidth: "standard",
+  tabStyle: "icons",
+  sideButtons: true,
+  accentCustom: "#0a84ff",
+  opacity: 100,
+  idleStyle: "plain",
+  notchClosed: "flared",
+  notchOpen: "flared",
   activities: {
     nowPlaying: true,
     volume: true,
@@ -24,16 +35,16 @@ export const defaultSettings: Settings = {
     clipboard: false,
     calendar: true,
     quickActions: true,
+    stopwatch: true,
+    hydration: true,
   },
 };
 
 /** Current settings, kept in sync with the backend. */
 const store = createStore<Settings>(defaultSettings);
 
-if (inTauri) {
-  void ipc.getSettings().then(store.set);
-  onEvent<Settings>("settings://changed", store.set);
-}
+if (inTauri) void ipc.getSettings().then(store.set);
+onEvent<Settings>("settings://changed", store.set);
 
 export const useSettings = store.use;
 export const getSettings = store.get;

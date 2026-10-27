@@ -1,0 +1,310 @@
+/* Now playing: the cover's color glows from behind the player */
+.panel-media {
+  position: relative;
+}
+
+.media-aura {
+  position: absolute;
+  inset: -20px -10px;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 70% at 18% 30%, rgba(var(--aura), 0.5), transparent 70%),
+    radial-gradient(50% 60% at 90% 100%, rgba(var(--aura), 0.28), transparent 70%);
+  transition: background 0.6s ease;
+}
+
+.panel-media > *:not(.media-aura) {
+  position: relative;
+  z-index: 1;
+}
+
+/* Clock: analog face beside the digital readout */
+.panel-clock {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-5);
+}
+
+.clock-face {
+  flex: none;
+  width: 118px;
+  height: 118px;
+}
+
+.face-rim {
+  fill: var(--island-fill);
+  stroke: color-mix(in srgb, var(--island-fg) 22%, transparent);
+  stroke-width: 1.2;
+}
+
+.face-tick {
+  stroke: color-mix(in srgb, var(--island-fg) 40%, transparent);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+}
+
+.face-tick-major {
+  stroke: var(--island-fg);
+  stroke-width: 2.2;
+}
+
+.hand {
+  stroke-linecap: round;
+  stroke: var(--island-fg);
+}
+
+.hand-h {
+  stroke-width: 4;
+}
+
+.hand-m {
+  stroke-width: 2.8;
+}
+
+.hand-s {
+  stroke: var(--timer, #ff9f0a);
+  stroke-width: 1.4;
+}
+
+.face-pin {
+  fill: var(--timer, #ff9f0a);
+}
+
+.clock-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.clock-text .clock-big {
+  font-size: 34px;
+}
+
+.zone-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-1);
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: var(--island-fill);
+  color: var(--island-fg);
+  font-size: var(--text-sm);
+  transition: background var(--dur-base) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+
+.zone-chip span:first-child {
+  color: var(--island-fg-muted);
+}
+
+.zone-chip:hover {
+  background: color-mix(in srgb, var(--island-fg) 16%, transparent);
+}
+
+.zone-chip:active {
+  transform: scale(0.95);
+}
+
+/* Water */
+.panel-water {
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-5);
+}
+
+.water-ring {
+  position: relative;
+  flex: none;
+  width: 112px;
+  height: 112px;
+}
+
+.water-ring svg {
+  width: 100%;
+  height: 100%;
+}
+
+.water-track,
+.water-arc {
+  fill: none;
+  stroke-width: 7;
+}
+
+.water-track {
+  stroke: var(--island-fill);
+}
+
+.water-arc {
+  stroke: #4da3ff;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.6s var(--ease-out, ease-out);
+  filter: drop-shadow(0 0 5px rgba(77, 163, 255, 0.55));
+}
+
+.water-ring[data-done="true"] .water-arc {
+  stroke: #30d158;
+  filter: drop-shadow(0 0 5px rgba(48, 209, 88, 0.55));
+}
+
+.water-count {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  font-size: 30px;
+  font-weight: 600;
+}
+
+.water-count small {
+  font-size: var(--text-sm);
+  color: var(--island-fg-muted);
+  font-weight: 500;
+}
+
+.water-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.water-note {
+  font-size: var(--text-md);
+  color: var(--island-fg);
+}
+
+.water-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.water-add {
+  flex: none;
+  padding-inline: 16px;
+  background: rgba(77, 163, 255, 0.2);
+  color: #4da3ff;
+}
+
+.ctl:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* Aurora idle look: slow drifting colored light around the closed pill */
+.stage[data-idle="aurora"][data-view="collapsed"] .pill {
+  animation: aurora 9s ease-in-out infinite;
+}
+
+@keyframes aurora {
+  0%,
+  100% {
+    box-shadow: -8px 2px 18px rgba(90, 200, 250, 0.5), 8px 2px 18px rgba(191, 90, 242, 0.45), var(--island-shadow);
+  }
+  33% {
+    box-shadow: -8px 2px 18px rgba(191, 90, 242, 0.5), 8px 2px 18px rgba(255, 159, 10, 0.4), var(--island-shadow);
+  }
+  66% {
+    box-shadow: -8px 2px 18px rgba(48, 209, 88, 0.45), 8px 2px 18px rgba(90, 200, 250, 0.5), var(--island-shadow);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage[data-idle="aurora"][data-view="collapsed"] .pill {
+    animation: none;
+  }
+}
+
+/* With shoulders, light effects follow the whole notch (pill and shoulders) instead of the pill's
+   rectangle, so no rectangular halo or leftover edge shows beside the curves. */
+.stage[data-ears="true"][data-idle="aurora"][data-view="collapsed"] .pill,
+.stage[data-ears="true"][data-idle="breathe"][data-view="collapsed"] .pill,
+.stage[data-ears="true"][data-idle="glow"][data-view="collapsed"] .pill,
+.stage[data-ears="true"][data-bump="true"] .pill {
+  animation: none;
+}
+
+.stage[data-ears="true"][data-idle="aurora"][data-view="collapsed"] .pill-wrap {
+  animation: aurora-shape 9s ease-in-out infinite;
+}
+
+.stage[data-ears="true"][data-idle="breathe"][data-view="collapsed"] .pill-wrap {
+  animation: breathe-shape 3.4s ease-in-out infinite;
+}
+
+.stage[data-ears="true"][data-idle="glow"][data-view="collapsed"] .pill-wrap {
+  filter: drop-shadow(0 4px 9px color-mix(in srgb, var(--accent) 55%, transparent));
+}
+
+.stage[data-ears="true"][data-bump="true"] .pill-wrap {
+  animation: bump-shape 0.65s var(--ease-out, ease-out);
+}
+
+@keyframes aurora-shape {
+  0%,
+  100% {
+    filter: drop-shadow(-6px 3px 9px rgba(90, 200, 250, 0.55)) drop-shadow(6px 3px 9px rgba(191, 90, 242, 0.5));
+  }
+  33% {
+    filter: drop-shadow(-6px 3px 9px rgba(191, 90, 242, 0.55)) drop-shadow(6px 3px 9px rgba(255, 159, 10, 0.45));
+  }
+  66% {
+    filter: drop-shadow(-6px 3px 9px rgba(48, 209, 88, 0.5)) drop-shadow(6px 3px 9px rgba(90, 200, 250, 0.55));
+  }
+}
+
+@keyframes breathe-shape {
+  0%,
+  100% {
+    filter: drop-shadow(0 3px 4px color-mix(in srgb, var(--accent) 16%, transparent));
+  }
+  50% {
+    filter: drop-shadow(0 4px 11px color-mix(in srgb, var(--accent) 65%, transparent));
+  }
+}
+
+@keyframes bump-shape {
+  0% {
+    filter: drop-shadow(0 0 0 color-mix(in srgb, var(--accent) 70%, transparent));
+  }
+  40% {
+    filter: drop-shadow(0 3px 9px color-mix(in srgb, var(--accent) 70%, transparent));
+  }
+  100% {
+    filter: drop-shadow(0 0 0 transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage[data-ears="true"] .pill-wrap {
+    animation: none;
+  }
+}
+
+/* Keep the album glow off the top edge, where the shoulders join the pill, so there is no seam */
+.media-aura {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent 44px, #000 96px);
+  mask-image: linear-gradient(to bottom, transparent 0, transparent 44px, #000 96px);
+  background:
+    radial-gradient(55% 60% at 22% 55%, rgba(var(--aura), 0.5), transparent 70%),
+    radial-gradient(50% 55% at 88% 100%, rgba(var(--aura), 0.28), transparent 70%);
+}
+
+/* Progress line: content lifts up to leave a clear gap, and the line is inset from the rounded ends */
+.compact:has(.pill-progress) {
+  padding-bottom: 9px;
+}
+
+.pill-progress {
+  left: 26px;
+  right: 26px;
+  bottom: 5px;
+  height: 2px;
+}

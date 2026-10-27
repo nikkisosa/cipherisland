@@ -10,6 +10,10 @@ interface TimerState {
   status: Status;
   /** Length chosen in the picker, in milliseconds. Kept between runs. */
   setMs: number;
+  /** Length of the countdown now running, in milliseconds. */
+  totalMs: number;
+  /** Focus session or break when a focus cycle is running, otherwise null. */
+  cycle: "focus" | "break" | null;
   endsAt: number;
   remainingMs: number;
   /** Incremented each second while running, to re-render subscribers. */
@@ -22,9 +26,21 @@ const MINUTE = 60_000;
 const DONE_VISIBLE_MS = 10_000;
 /** Preset lengths in minutes. */
 const PRESETS = [1, 5, 10, 25];
+/** Length of a focus session, in minutes. */
+const FOCUS_MIN = 25;
+/** Length of the break that follows a focus session, in minutes. */
+const BREAK_MIN = 5;
 
 /** Timer state shared by the compact pill and the expanded panel. */
-const store = createStore<TimerState>({ status: "idle", setMs: 5 * MINUTE, endsAt: 0, remainingMs: 0, tick: 0 });
+const store = createStore<TimerState>({
+  status: "idle",
+  setMs: 5 * MINUTE,
+  totalMs: 5 * MINUTE,
+  cycle: null,
+  endsAt: 0,
+  remainingMs: 0,
+  tick: 0,
+});
 
 let tickTimer: number | undefined;
 let doneTimer: number | undefined;
@@ -40,7 +56,7 @@ function remaining(s: TimerState): number {
 }
 
 /** Schedules the next display update for the next whole second. Does nothing unless running. */
-function schedule() {
+function schedule(): void {
   window.clearTimeout(tickTimer);
   const s = store.get();
   if (s.status !== "running") return;
@@ -52,21 +68,39 @@ function schedule() {
   }, left % 1000 || 1000);
 }
 
-/** Marks the timer as done and returns it to idle after `DONE_VISIBLE_MS`. */
-function finish() {
+/**
+ * Ends the current countdown.
+ *
+ * A finished focus session starts its break straight away. Anything else is marked done and
+ * returns to idle after `DONE_VISIBLE_MS`.
+ */
+function finish(): void {
   window.clearTimeout(tickTimer);
-  store.set((s) => ({ ...s, status: "done", remainingMs: 0, tick: s.tick + 1 }));
+  if (store.get().cycle === "focus") {
+    const ms = BREAK_MIN * MINUTE;
+    store.set((s) => ({ ...s, status: "running", cycle: "break", totalMs: ms, endsAt: Date.now() + ms, remainingMs: ms }));
+    return schedule();
+  }
+  store.set((s) => ({ ...s, status: "done", cycle: null, remainingMs: 0, tick: s.tick + 1 }));
   window.clearTimeout(doneTimer);
   doneTimer = window.setTimeout(() => {
     if (store.get().status === "done") store.set((s) => ({ ...s, status: "idle" }));
   }, DONE_VISIBLE_MS);
 }
 
-/** Operations on the timer: `start`, `pause`, `resume`, `cancel`, `adjust` (change the picked length by minutes) and `preset`. */
+/**
+ * Operations on the timer: `start`, `startFocus` (a focus session followed by a break),
+ * `pause`, `resume`, `cancel`, `adjust` (change the picked length by minutes) and `preset`.
+ */
 const actions = {
   start() {
     const ms = store.get().setMs;
-    store.set((s) => ({ ...s, status: "running", endsAt: Date.now() + ms, remainingMs: ms }));
+    store.set((s) => ({ ...s, status: "running", cycle: null, totalMs: ms, endsAt: Date.now() + ms, remainingMs: ms }));
+    schedule();
+  },
+  startFocus() {
+    const ms = FOCUS_MIN * MINUTE;
+    store.set((s) => ({ ...s, status: "running", cycle: "focus", totalMs: ms, endsAt: Date.now() + ms, remainingMs: ms }));
     schedule();
   },
   pause() {
@@ -80,7 +114,7 @@ const actions = {
   cancel() {
     window.clearTimeout(tickTimer);
     window.clearTimeout(doneTimer);
-    store.set((s) => ({ ...s, status: "idle", remainingMs: 0 }));
+    store.set((s) => ({ ...s, status: "idle", cycle: null, remainingMs: 0 }));
   },
   adjust(deltaMin: number) {
     store.set((s) => ({ ...s, setMs: Math.min(180, Math.max(1, s.setMs / MINUTE + deltaMin)) * MINUTE }));
@@ -106,6 +140,18 @@ function Trailing() {
   return (
     <span className="timer-readout num" data-paused={s.status === "paused"}>
       {formatClock(Math.ceil(remaining(s) / 1000) * 1000)}
+    </span>
+  );
+}
+
+/** Thin line along the bottom of the compact pill showing how much of the countdown is left. */
+function Progress() {
+  const s = store.use();
+  if (s.status === "idle" || s.status === "done") return null;
+  const ratio = Math.min(1, remaining(s) / Math.max(s.totalMs, 1));
+  return (
+    <span className="pill-progress" aria-hidden="true">
+      <i style={{ width: `${ratio * 100}%`, background: "var(--timer)" }} />
     </span>
   );
 }
@@ -142,19 +188,25 @@ function Expanded() {
             </button>
           ))}
         </div>
-        <button type="button" className="btn-start" onClick={actions.start}>
-          Start timer
-        </button>
+        <div className="timer-actions">
+          <button type="button" className="btn-secondary" onClick={actions.startFocus}>
+            Focus {FOCUS_MIN} + {BREAK_MIN}
+          </button>
+          <button type="button" className="btn-start" onClick={actions.start}>
+            Start timer
+          </button>
+        </div>
       </div>
     );
   }
 
   const left = remaining(s);
-  const total = Math.max(s.setMs, 1);
+  const total = Math.max(s.totalMs, 1);
   const ratio = s.status === "done" ? 0 : Math.min(1, left / total);
   return (
     <div className="panel panel-timer">
       <div className="timer-running">
+        {s.cycle && <div className="panel-title">{s.cycle === "focus" ? "Focus" : "Break"}</div>}
         <div className="timer-big num" data-done={s.status === "done"}>
           {s.status === "done" ? "Time's up" : formatClock(Math.ceil(left / 1000) * 1000)}
         </div>
@@ -189,9 +241,10 @@ export const timer: ActivityModule = {
       priority: s.status === "done" ? 97 : s.status === "running" ? 60 : 55,
       live: enabled && s.status !== "idle",
       available: enabled,
-      expandedHeight: 140,
+
       Glyph,
       Trailing,
+      Progress,
       Expanded,
     };
   },

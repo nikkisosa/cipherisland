@@ -7,10 +7,10 @@ import type { Activity } from "../activities/types";
  * @param props.activity The activity occupying the pill.
  */
 export function CompactView({ activity }: { activity: Activity }) {
-  const { Glyph, Trailing, Title, id, label } = activity;
+  const { Glyph, Trailing, Title, Progress, id, label } = activity;
   return (
     <div className="compact" role="status" aria-label={label}>
-      <motion.span layoutId={`glyph-${id}`} className="compact-glyph">
+      <motion.span layoutId={`glyph-${id}`} className="compact-glyph" data-live-id={id}>
         <Glyph size={22} />
       </motion.span>
       {Title && (
@@ -21,6 +21,7 @@ export function CompactView({ activity }: { activity: Activity }) {
       <span className="compact-value">
         <Trailing />
       </span>
+      {Progress && <Progress />}
     </div>
   );
 }

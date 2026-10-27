@@ -28,11 +28,13 @@ pub struct Activities {
     pub clipboard: bool,
     pub calendar: bool,
     pub quick_actions: bool,
+    pub stopwatch: bool,
+    pub hydration: bool,
 }
 
 impl Default for Activities {
     fn default() -> Self {
-        Self { now_playing: true, volume: true, battery: true, timer: true, notifications: false, clock: true, system_stats: true, clipboard: false, calendar: true, quick_actions: true }
+        Self { now_playing: true, volume: true, battery: true, timer: true, notifications: false, clock: true, system_stats: true, clipboard: false, calendar: true, quick_actions: true, stopwatch: true, hydration: true }
     }
 }
 
@@ -57,6 +59,28 @@ pub struct Settings {
     pub theme: String,
     /// Accent for progress bars and highlights: auto, blue, green, orange, pink or teal.
     pub accent: String,
+    /// Animation feel: bouncy, smooth or snappy.
+    pub motion: String,
+    /// Corner style: round, soft or sharp.
+    pub shape: String,
+    /// Island surface: solid, glass or outline.
+    pub surface: String,
+    /// Width of the open island: narrow, standard or wide.
+    pub open_width: String,
+    /// Tab strip style: icons, labels or dots.
+    pub tab_style: String,
+    /// Show previous/next arrows beside the open island.
+    pub side_buttons: bool,
+    /// Color used when `accent` is `custom`, as `#rrggbb`.
+    pub accent_custom: String,
+    /// Island opacity in percent, 40 to 100.
+    pub opacity: u8,
+    /// Look of the closed island when idle: plain, dot or glow.
+    pub idle_style: String,
+    /// Edge style of the closed island when attached to the top: flat or flared.
+    pub notch_closed: String,
+    /// Edge style of the open island when attached to the top: flat or flared.
+    pub notch_open: String,
     pub activities: Activities,
 }
 
@@ -73,6 +97,17 @@ impl Default for Settings {
             attach_top: true,
             theme: "classic".into(),
             accent: "auto".into(),
+            motion: "bouncy".into(),
+            shape: "round".into(),
+            surface: "solid".into(),
+            open_width: "standard".into(),
+            tab_style: "icons".into(),
+            side_buttons: true,
+            accent_custom: "#0a84ff".into(),
+            opacity: 100,
+            idle_style: "plain".into(),
+            notch_closed: "flared".into(),
+            notch_open: "flared".into(),
             activities: Activities::default(),
         }
     }
@@ -119,6 +154,11 @@ fn persist(app: &AppHandle, s: &Settings) {
 /// Currently always returns `Ok`; the `Result` keeps the command signature stable.
 pub fn apply(app: &AppHandle, mut next: Settings) -> Result<(), String> {
     next.top_offset = next.top_offset.clamp(0, 96);
+    next.opacity = next.opacity.clamp(40, 100);
+    let hex = next.accent_custom.strip_prefix('#').unwrap_or("");
+    if hex.len() != 6 || !hex.chars().all(|c| c.is_ascii_hexdigit()) {
+        next.accent_custom = Settings::default().accent_custom;
+    }
     let prev = get();
     *cell().lock().unwrap() = next.clone();
     persist(app, &next);

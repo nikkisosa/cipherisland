@@ -10,6 +10,17 @@ const store = createStore<SystemStats | null>(null);
 /** Bytes in one gibibyte. */
 const GB = 1024 ** 3;
 
+/**
+ * Formats a transfer rate.
+ *
+ * @param bytesPerSecond Rate in bytes per second.
+ * @returns For example `850 KB/s` or `1.2 MB/s`.
+ */
+function formatRate(bytesPerSecond: number): string {
+  const kb = bytesPerSecond / 1024;
+  return kb >= 1024 ? `${(kb / 1024).toFixed(1)} MB/s` : `${Math.round(kb)} KB/s`;
+}
+
 /** Leading glyph of the compact pill and the tab strip. */
 function Glyph({ size = 20 }: { size?: number }) {
   return <ChipIcon size={size} />;
@@ -35,7 +46,7 @@ function Meter({ label, value, detail }: { label: string; value: number; detail:
   );
 }
 
-/** Panel shown in the expanded island. CPU and memory meters, sampled once a second while mounted. */
+/** Panel shown in the expanded island. CPU, memory, disk and network, sampled once a second while mounted. */
 function Expanded() {
   const s = store.use();
 
@@ -61,6 +72,16 @@ function Expanded() {
         value={memPct}
         detail={s ? `${(s.memUsed / GB).toFixed(1)} of ${(s.memTotal / GB).toFixed(0)} GB` : "--"}
       />
+      <Meter
+        label="Disk"
+        value={s && s.diskTotal > 0 ? (s.diskUsed / s.diskTotal) * 100 : 0}
+        detail={s ? `${(s.diskUsed / GB).toFixed(0)} of ${(s.diskTotal / GB).toFixed(0)} GB` : "--"}
+      />
+      <div className="stat stat-net">
+        <span className="stat-label">Network</span>
+        <span className="num stat-rate">{s ? `↓ ${formatRate(s.netDown)}` : "--"}</span>
+        <span className="num stat-rate">{s ? `↑ ${formatRate(s.netUp)}` : "--"}</span>
+      </div>
     </div>
   );
 }
@@ -75,8 +96,7 @@ export const systemStats: ActivityModule = {
       label: "System",
       priority: 5,
       live: false,
-      available: enabled,
-      expandedHeight: 96,
+      available: enabled,
       Glyph,
       Trailing: () => null,
       Expanded,

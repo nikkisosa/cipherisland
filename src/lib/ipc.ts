@@ -13,12 +13,35 @@ export interface ActivitiesSettings {
   clipboard: boolean;
   calendar: boolean;
   quickActions: boolean;
+  stopwatch: boolean;
+  hydration: boolean;
 }
 
+/** Edge style where the island meets the top of the screen. `flared` adds curved shoulders. */
+export type NotchId = "flat" | "flared";
+
+/** Look of the closed island when idle. */
+export type IdleStyleId = "plain" | "dot" | "glow" | "breathe" | "aurora";
+
+/** Corner style of the island and its buttons. */
+export type ShapeId = "round" | "soft" | "sharp";
+
+/** How the island surface is drawn. */
+export type SurfaceId = "solid" | "glass" | "outline";
+
+/** Width of the open island. */
+export type OpenWidthId = "narrow" | "standard" | "wide";
+
+/** How tabs are shown in the open island. */
+export type TabStyleId = "icons" | "labels" | "dots";
+
+/** Animation feel. */
+export type MotionId = "bouncy" | "smooth" | "snappy";
+
 /** Island theme. */
-export type ThemeId = "classic" | "graphite" | "midnight" | "light";
+export type ThemeId = "classic" | "graphite" | "midnight" | "light" | "forest" | "rose" | "sunset" | "ocean" | "violet" | "gold";
 /** Accent color for progress bars and highlights. `auto` follows the theme. */
-export type AccentId = "auto" | "blue" | "green" | "orange" | "pink" | "teal";
+export type AccentId = "auto" | "blue" | "green" | "orange" | "pink" | "teal" | "purple" | "red" | "yellow" | "custom";
 
 /** User settings. Mirrors `Settings` in `settings.rs`. */
 export interface Settings {
@@ -32,6 +55,17 @@ export interface Settings {
   attachTop: boolean;
   theme: ThemeId;
   accent: AccentId;
+  motion: MotionId;
+  shape: ShapeId;
+  surface: SurfaceId;
+  openWidth: OpenWidthId;
+  tabStyle: TabStyleId;
+  sideButtons: boolean;
+  accentCustom: string;
+  opacity: number;
+  idleStyle: IdleStyleId;
+  notchClosed: NotchId;
+  notchOpen: NotchId;
   activities: ActivitiesSettings;
 }
 
@@ -50,15 +84,19 @@ export interface Rect {
   h: number;
 }
 
-/** CPU and memory load. */
+/** CPU, memory, disk and network load. Network rates are in bytes per second. */
 export interface SystemStats {
   cpu: number;
   memUsed: number;
   memTotal: number;
+  diskUsed: number;
+  diskTotal: number;
+  netDown: number;
+  netUp: number;
 }
 
 /** Quick actions the backend can run. */
-export type QuickAction = "mute" | "snip" | "lock" | "tasks";
+export type QuickAction = "mute" | "snip" | "lock" | "tasks" | "desktop" | "files" | "emoji";
 
 /** Transport commands for the current media session. */
 export type MediaAction = "play_pause" | "next" | "previous";
@@ -73,6 +111,8 @@ export const ipc = {
   setOutsideWatch: (watch: boolean) => invoke<void>("set_outside_watch", { watch }),
   systemStats: () => invoke<SystemStats>("system_stats"),
   quickAction: (name: QuickAction) => invoke<void>("quick_action", { name }),
+  setKeepAwake: (on: boolean) => invoke<void>("set_keep_awake", { on }),
+  copyText: (text: string) => invoke<boolean>("copy_text", { text }),
   mediaSeek: (positionMs: number) => invoke<void>("media_seek", { positionMs }),
   getVolume: () => invoke<{ level: number; muted: boolean } | null>("get_volume"),
   setVolume: (level: number) => invoke<void>("set_volume", { level }),

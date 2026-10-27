@@ -4,6 +4,7 @@ import { Island } from "./components/Island";
 import "./styles/tokens.css";
 import "./styles/themes.css";
 import "./styles/island.css";
+import "./styles/extras.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

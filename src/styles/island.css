@@ -47,7 +47,7 @@ button:focus-visible,
 .stage {
   position: relative;
   color: var(--island-fg);
-  width: 420px;
+  width: 500px;
   height: 290px;
 }
 
@@ -846,5 +846,472 @@ button:focus-visible,
   .pill-wrap,
   .split-dot {
     transition: none;
+  }
+}
+
+/* Focus cycle buttons share the row with Start */
+.timer-actions .btn-start {
+  width: auto;
+  flex: 1;
+}
+
+/* Network row in the System panel */
+.stat-net {
+  grid-template-columns: 56px 1fr 1fr;
+}
+
+.stat-rate {
+  font-size: var(--text-md);
+}
+
+/* Shape options: round (default), soft and sharp */
+.stage {
+  --btn-radius: 50%;
+}
+
+.stage[data-shape="soft"] {
+  --btn-radius: 15px;
+}
+
+.stage[data-shape="sharp"] {
+  --btn-radius: 9px;
+}
+
+.split-dot,
+.dock-btn {
+  border-radius: var(--btn-radius);
+}
+
+/* Surface options: solid (default), glass and outline */
+.stage[data-surface="glass"] .pill,
+.stage[data-surface="glass"] .split-dot,
+.stage[data-surface="glass"] .dock-btn,
+.stage[data-surface="glass"] .menu {
+  background: color-mix(in srgb, var(--island-bg) calc(var(--island-alpha, 100) * 0.72%), transparent);
+}
+
+.stage[data-surface="outline"] .pill,
+.stage[data-surface="outline"] .split-dot,
+.stage[data-surface="outline"] .dock-btn,
+.stage[data-surface="outline"] .menu {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--island-fg) 30%, transparent), var(--island-shadow);
+}
+
+/* Tab styles: icons (default), labels and dots */
+.tab {
+  gap: 6px;
+}
+
+.tab-label,
+.tab-dot {
+  display: none;
+}
+
+.tabs[data-style="labels"] .tab[aria-selected="true"] {
+  display: inline-flex;
+  align-items: center;
+  width: auto;
+  padding-inline: 10px;
+}
+
+.tabs[data-style="labels"] .tab[aria-selected="true"] .tab-label {
+  display: inline;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.tabs[data-style="dots"] .tab {
+  width: 16px;
+}
+
+.tabs[data-style="dots"] .tab > :not(.tab-dot) {
+  display: none;
+}
+
+.tabs[data-style="dots"] .tab .tab-dot {
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.tabs[data-style="dots"] .tab[aria-selected="true"] {
+  background: none;
+}
+
+.tabs[data-style="dots"] .tab[aria-selected="true"] .tab-dot {
+  width: 8px;
+  height: 8px;
+}
+
+/* Panels slide inside the fixed-size body */
+.slide {
+  position: absolute;
+  inset: 0;
+}
+
+.expanded-body {
+  position: relative;
+}
+
+/* Arrow buttons beside the open island */
+.side-btn {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--btn-radius);
+  background: var(--island-bg);
+  box-shadow: var(--island-shadow);
+  color: var(--island-fg);
+}
+
+.stage[data-surface="glass"] .side-btn {
+  background: color-mix(in srgb, var(--island-bg) calc(var(--island-alpha, 100) * 0.72%), transparent);
+}
+
+.stage[data-surface="outline"] .side-btn {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--island-fg) 30%, transparent), var(--island-shadow);
+}
+
+/* Opacity setting. Glass rules above multiply it by 0.72. */
+.stage .pill,
+.stage .split-dot,
+.stage .dock-btn,
+.stage .menu,
+.stage .side-btn {
+  background: color-mix(in srgb, var(--island-bg) calc(var(--island-alpha, 100) * 1%), transparent);
+}
+
+.stage[data-surface="glass"] .pill,
+.stage[data-surface="glass"] .split-dot,
+.stage[data-surface="glass"] .dock-btn,
+.stage[data-surface="glass"] .menu,
+.stage[data-surface="glass"] .side-btn {
+  background: color-mix(in srgb, var(--island-bg) calc(var(--island-alpha, 100) * 0.72%), transparent);
+}
+
+/* Idle looks for the closed island */
+.idle-dot {
+  position: absolute;
+  top: 50%;
+  right: 18px;
+  width: 7px;
+  height: 7px;
+  margin-top: -3.5px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 7px var(--accent);
+}
+
+.stage[data-idle="glow"][data-view="collapsed"] .pill {
+  box-shadow: 0 0 16px color-mix(in srgb, var(--accent) 50%, transparent), var(--island-shadow);
+}
+
+/* Flared shoulders: concave curves joining the docked island to the top edge. Wider than
+   tall, like the shoulders of a hardware notch, and anti-aliased over about a pixel. */
+.pill-wrap {
+  position: relative;
+}
+
+.stage {
+  --ear-w: 28px;
+  --ear-h: 20px;
+  --ear-fill: color-mix(in srgb, var(--island-bg) calc(var(--island-alpha, 100) * 1%), transparent);
+}
+
+/* Open shoulders are as wide as the canvas allows (60px at most), so a wide island keeps
+   its curves instead of having them cut off at the window edge. */
+.stage[data-view="expanded"] {
+  --ear-w: min(60px, calc((500px - var(--open-w, 370px)) / 2));
+  --ear-h: 42px;
+}
+
+.stage[data-surface="glass"] {
+  --ear-fill: color-mix(in srgb, var(--island-bg) calc(var(--island-alpha, 100) * 0.72%), transparent);
+}
+
+.ear {
+  position: absolute;
+  top: 0;
+  width: var(--ear-w);
+  height: var(--ear-h);
+  pointer-events: none;
+  transition: width 220ms var(--ease-out), height 220ms var(--ease-out);
+}
+
+.ear-left {
+  right: calc(100% - 0.5px);
+  background: radial-gradient(ellipse 100% 100% at 0 100%, transparent 97%, var(--ear-fill) 100%);
+}
+
+.ear-right {
+  left: calc(100% - 0.5px);
+  background: radial-gradient(ellipse 100% 100% at 100% 100%, transparent 97%, var(--ear-fill) 100%);
+}
+
+.stage[data-peek="true"] .ear {
+  opacity: 0.12;
+}
+
+/* With shoulders there is no outline: a soft shadow below the island is all that remains. */
+.stage[data-ears="true"]:not([data-surface="outline"]) .pill {
+  box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.55);
+}
+
+/* Progress line along the bottom of the compact pill (timer countdown, track position) */
+.pill-progress {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: 3px;
+  height: 2px;
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--island-fg) 14%, transparent);
+  overflow: hidden;
+}
+
+.pill-progress i {
+  display: block;
+  height: 100%;
+  border-radius: 1px;
+  transition: width 1s linear;
+}
+
+/* Soft sheen on the top of the closed and open surface */
+.stage[data-surface="solid"] .pill::after,
+.stage[data-surface="glass"] .pill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--island-fg) 7%, transparent), transparent 42%);
+}
+
+/* A pulse when a new activity takes the pill */
+.stage[data-bump="true"] .pill {
+  animation: bump 0.65s var(--ease-out, ease-out);
+}
+
+@keyframes bump {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 60%, transparent), var(--island-shadow);
+  }
+  100% {
+    box-shadow: 0 0 0 14px transparent, var(--island-shadow);
+  }
+}
+
+/* Breathing idle look */
+.stage[data-idle="breathe"][data-view="collapsed"] .pill {
+  animation: breathe 3.4s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 6px color-mix(in srgb, var(--accent) 14%, transparent), var(--island-shadow);
+  }
+  50% {
+    box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 58%, transparent), var(--island-shadow);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage[data-idle="breathe"][data-view="collapsed"] .pill,
+  .stage[data-bump="true"] .pill {
+    animation: none;
+  }
+}
+
+/* Flared shoulders replace the shadow, so keep the sheen but not the pulse ring there */
+.stage[data-ears="true"][data-bump="true"]:not([data-surface="outline"]) .pill {
+  animation: none;
+}
+
+/* Quick buttons: nine fit in the canvas at this size */
+.dock {
+  gap: 8px;
+}
+
+.dock-btn {
+  width: 38px;
+  height: 38px;
+}
+
+.dock-btn[aria-pressed="true"] {
+  background: var(--accent-solid, var(--island-fg));
+  color: var(--island-bg);
+}
+
+/* Stopwatch */
+.panel-stopwatch {
+  gap: var(--space-2);
+}
+
+.laps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-height: 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--text-sm);
+  color: var(--island-fg-muted);
+}
+
+.laps li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: var(--space-3);
+}
+
+.laps-split {
+  min-width: 64px;
+  text-align: right;
+  color: var(--island-fg);
+}
+
+.btn-secondary:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Clipboard history */
+.panel-clip {
+  gap: var(--space-2);
+  justify-content: flex-start;
+}
+
+.clip-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.clip-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  height: 28px;
+  padding-inline: 10px;
+  border-radius: 10px;
+  background: var(--island-fill);
+  color: var(--island-fg);
+  font-size: var(--text-sm);
+  text-align: left;
+}
+
+.clip-item:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--island-fg) 16%, transparent);
+}
+
+.clip-item:disabled {
+  opacity: 0.45;
+}
+
+.clip-item-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.clip-item-icon {
+  flex: none;
+  display: inline-flex;
+  color: var(--island-fg-muted);
+}
+
+/* Fade the outer tip of each shoulder so it does not leave a hairline along the top edge */
+.ear-left {
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 45%);
+  mask-image: linear-gradient(to right, transparent 0%, #000 45%);
+}
+
+.ear-right {
+  -webkit-mask-image: linear-gradient(to left, transparent 0%, #000 45%);
+  mask-image: linear-gradient(to left, transparent 0%, #000 45%);
+}
+
+/* The sheen would make the pill lighter than its shoulders and show a seam where they join */
+.stage[data-ears="true"] .pill::after {
+  content: none;
+}
+
+/* Panels settle in: each direct child rises into place a beat after the one before */
+.slide .panel > * {
+  animation: rise 0.34s var(--ease-out, ease-out) both;
+}
+
+.slide .panel > *:nth-child(2) {
+  animation-delay: 0.04s;
+}
+
+.slide .panel > *:nth-child(3) {
+  animation-delay: 0.08s;
+}
+
+.slide .panel > *:nth-child(4) {
+  animation-delay: 0.12s;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* The glyph of a running timer or stopwatch breathes so the pill reads as alive */
+.compact-glyph[data-live-id="timer"],
+.compact-glyph[data-live-id="stopwatch"] {
+  animation: glyph-pulse 2s ease-in-out infinite;
+}
+
+@keyframes glyph-pulse {
+  50% {
+    transform: scale(1.14);
+    opacity: 0.75;
+  }
+}
+
+/* Press feedback and a clearer focus ring on tabs, quick buttons and the arrows */
+.tab:active {
+  transform: scale(0.9);
+}
+
+.tab:hover:not([aria-selected="true"]) {
+  background: color-mix(in srgb, var(--island-fg) 8%, transparent);
+}
+
+.dock-btn:hover {
+  background: color-mix(in srgb, var(--island-bg) 82%, var(--island-fg));
+}
+
+.expanded-body {
+  touch-action: pan-y;
+  cursor: grab;
+}
+
+.expanded-body:active {
+  cursor: grabbing;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slide .panel > *,
+  .compact-glyph[data-live-id] {
+    animation: none;
   }
 }

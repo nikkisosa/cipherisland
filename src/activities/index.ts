@@ -3,15 +3,17 @@ import { battery } from "./battery";
 import { calendar } from "./calendar";
 import { clipboard } from "./clipboard";
 import { clock } from "./clock";
+import { hydration } from "./hydration";
 import { notifications } from "./notifications";
 import { nowPlaying } from "./nowPlaying";
 import { systemStats } from "./systemStats";
+import { stopwatch } from "./stopwatch";
 import { timer } from "./timer";
 import type { Activity, ActivityModule } from "./types";
 import { volume } from "./volume";
 
 /** All activity modules. The list is constant so their hooks run in the same order on every render. */
-const modules: readonly ActivityModule[] = [volume, notifications, clipboard, battery, timer, nowPlaying, systemStats, calendar, clock];
+const modules: readonly ActivityModule[] = [volume, notifications, clipboard, battery, timer, stopwatch, hydration, nowPlaying, systemStats, calendar, clock];
 
 /** Result of [useActivities]. */
 export interface ActivityView {

@@ -81,6 +81,18 @@ fn quick_action(name: String) {
     actions::run(&name);
 }
 
+/// Turns the keep-awake request on or off.
+#[tauri::command]
+fn set_keep_awake(on: bool) {
+    actions::set_keep_awake(on);
+}
+
+/// Copies `text` back onto the clipboard. Returns whether it worked.
+#[tauri::command]
+fn copy_text(text: String) -> bool {
+    clipboard::write_text(&text)
+}
+
 /// Returns the master volume and mute state, or `None` without an audio device.
 #[tauri::command]
 fn get_volume() -> Option<audio::VolumeEvent> {
@@ -158,6 +170,8 @@ fn main() {
             get_volume,
             set_volume,
             quick_action,
+            set_keep_awake,
+            copy_text,
             system_stats,
             frontend_ready,
             open_settings,

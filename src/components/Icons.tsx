@@ -234,3 +234,78 @@ export const ArrowUpRightIcon = (p: IconProps) => (
     <path d="M7.5 16.5 16.5 7.5M9 7.5h7.5V15" />
   </Base>
 );
+
+/** Chevron pointing left. */
+export const ChevronLeftIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M14.5 6.5 9 12l5.5 5.5" />
+  </Base>
+);
+
+/** Chevron pointing right. */
+export const ChevronRightIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M9.5 6.5 15 12l-5.5 5.5" />
+  </Base>
+);
+
+/** Stopwatch: dial with a crown and a hand. */
+export const StopwatchIcon = (p: IconProps) => (
+  <Base {...p}>
+    <circle cx="12" cy="13.5" r="7" />
+    <path d="M10 3.5h4M12 13.5V9.8M18.2 7.3l1.1-1.1" />
+  </Base>
+);
+
+/** Coffee cup with steam, used for keep awake. */
+export const CoffeeIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M5 10h11v4.5a4.5 4.5 0 0 1-4.5 4.5h-2A4.5 4.5 0 0 1 5 14.5z" />
+    <path d="M16 11.5h1.2a2.3 2.3 0 0 1 0 4.6H15.6M8.5 3.5v3M12 3.5v3" />
+  </Base>
+);
+
+/** Desktop monitor, used for show desktop. */
+export const DesktopIcon = (p: IconProps) => (
+  <Base {...p}>
+    <rect x="3.5" y="4.5" width="17" height="11.5" rx="2" />
+    <path d="M9 20h6M12 16v4" />
+  </Base>
+);
+
+/** Folder, used for File Explorer. */
+export const FolderIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M3.5 7.5a2 2 0 0 1 2-2h3.7l2 2.3h7.3a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5.5a2 2 0 0 1-2-2z" />
+  </Base>
+);
+
+/** Smiley face, used for the emoji picker. */
+export const SmileIcon = (p: IconProps) => (
+  <Base {...p}>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M8.6 14.2a4.2 4.2 0 0 0 6.8 0M9.2 9.8h.01M14.8 9.8h.01" />
+  </Base>
+);
+
+/** Two overlapping sheets, used for copy. */
+export const CopyIcon = (p: IconProps) => (
+  <Base {...p}>
+    <rect x="8.5" y="8.5" width="11" height="11" rx="2.2" />
+    <path d="M15.5 8.5V6.7a2.2 2.2 0 0 0-2.2-2.2H6.7a2.2 2.2 0 0 0-2.2 2.2v6.6a2.2 2.2 0 0 0 2.2 2.2h1.8" />
+  </Base>
+);
+
+/** Flag, used for laps. */
+export const FlagIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M6 20.5V4.5M6 5.5h11l-2.2 3.4L17 12.3H6" />
+  </Base>
+);
+
+/** Water drop. */
+export const DropIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M12 3.5c3.4 4 5.8 7 5.8 10.2a5.8 5.8 0 0 1-11.6 0C6.2 10.5 8.6 7.5 12 3.5z" />
+  </Base>
+);

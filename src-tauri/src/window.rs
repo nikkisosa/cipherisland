@@ -22,7 +22,7 @@ use windows::Win32::UI::WindowsAndMessaging::{
 
 /// Width of the transparent canvas the island is drawn into, in logical pixels.
 /// Must match `CANVAS` in `src/lib/metrics.ts`.
-pub const CANVAS_W: f64 = 420.0;
+pub const CANVAS_W: f64 = 500.0;
 /// Height of the transparent canvas, in logical pixels.
 pub const CANVAS_H: f64 = 290.0;
 
