@@ -9,6 +9,14 @@ on:
         description: Publish a GitHub release
         type: boolean
         default: true
+      bump:
+        description: Which part of the version to raise for this release
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: patch
 
 permissions:
   contents: write
@@ -23,6 +31,8 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -38,14 +48,49 @@ jobs:
         with:
           workspaces: src-tauri
 
-      - name: Read version
+      - name: Work out version
         id: meta
         shell: pwsh
+        env:
+          BUMP: ${{ inputs.bump }}
         run: |
-          $version = (Get-Content src-tauri/tauri.conf.json | ConvertFrom-Json).version
-          $tag = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME } else { "v$version" }
+          # A pushed tag decides its own version. A manual run takes the highest of the latest
+          # v*.*.* tag and the version in tauri.conf.json, then raises it by the chosen part.
+          if ($env:GITHUB_REF_TYPE -eq 'tag') {
+            $version = $env:GITHUB_REF_NAME.TrimStart('v')
+            $bumped = $false
+          } else {
+            $known = @([version](Get-Content src-tauri/tauri.conf.json | ConvertFrom-Json).version)
+            foreach ($t in (git tag --list 'v*')) {
+              $n = $t.TrimStart('v')
+              if ($n -match '^\d+\.\d+\.\d+$') { $known += [version]$n }
+            }
+            $top = $known | Sort-Object -Descending | Select-Object -First 1
+            switch ($env:BUMP) {
+              'major' { $next = [version]::new($top.Major + 1, 0, 0) }
+              'minor' { $next = [version]::new($top.Major, $top.Minor + 1, 0) }
+              default { $next = [version]::new($top.Major, $top.Minor, $top.Build + 1) }
+            }
+            $version = $next.ToString()
+            $bumped = $true
+          }
+
+          # Write the version into every file that carries it, so the build embeds it.
+          $utf8 = New-Object System.Text.UTF8Encoding($false)
+          function Set-First([string]$path, [string]$pattern, [string]$replacement, [int]$count = 1) {
+            $text = [IO.File]::ReadAllText($path)
+            $text = [regex]::new($pattern, 'Multiline').Replace($text, $replacement, $count)
+            [IO.File]::WriteAllText($path, $text, $utf8)
+          }
+          Set-First 'src-tauri/tauri.conf.json' '"version":\s*"[^"]+"' "`"version`": `"$version`""
+          Set-First 'package.json' '"version":\s*"[^"]+"' "`"version`": `"$version`""
+          Set-First 'package-lock.json' '"version":\s*"[^"]+"' "`"version`": `"$version`"" 2
+          Set-First 'src-tauri/Cargo.toml' '^version\s*=\s*"[^"]+"' "version = `"$version`""
+
           "version=$version" >> $env:GITHUB_OUTPUT
-          "tag=$tag" >> $env:GITHUB_OUTPUT
+          "tag=v$version" >> $env:GITHUB_OUTPUT
+          "bumped=$bumped" >> $env:GITHUB_OUTPUT
+          Write-Host "Releasing v$version"
 
       - name: Install dependencies
         run: npm ci
@@ -85,12 +130,23 @@ jobs:
           path: dist-release/*
           if-no-files-found: error
 
+      - name: Commit version bump
+        id: commit
+        if: steps.meta.outputs.bumped == 'True' && inputs.publish
+        shell: pwsh
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json src-tauri/tauri.conf.json src-tauri/Cargo.toml src-tauri/Cargo.lock
+          git commit -m "Release ${{ steps.meta.outputs.tag }}"
+          git push origin "HEAD:${{ github.ref_name }}"
+
       - name: Publish GitHub release
         if: github.event_name == 'push' || inputs.publish
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.meta.outputs.tag }}
-          target_commitish: ${{ github.sha }}
+          target_commitish: ${{ steps.commit.outcome == 'success' && format('refs/heads/{0}', github.ref_name) || github.sha }}
           name: CipherIsland ${{ steps.meta.outputs.tag }}
           generate_release_notes: true
           draft: false

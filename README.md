@@ -106,9 +106,11 @@ The native window is a fixed 500 x 290 transparent canvas, and the pill is drawn
 `.github/workflows/release.yml` builds on a Windows runner and publishes a GitHub release. There are two ways to start it:
 
 - Push a tag: `git tag v0.1.0` then `git push origin v0.1.0`. The release uses that tag.
-- Run it by hand from the Actions tab. It publishes a release tagged `v<version>`, where `version` comes from `src-tauri/tauri.conf.json`. Untick "Publish a GitHub release" to build without publishing; the files are then kept as a build artifact.
+- Run it by hand from the Actions tab and pick `patch`, `minor` or `major`. The workflow takes the highest of the latest `v*.*.*` tag and the version in `src-tauri/tauri.conf.json`, raises it by that part, writes the result into `tauri.conf.json`, `package.json`, `package-lock.json` and `Cargo.toml`, builds, commits the bump back to the branch as "Release vX.Y.Z" and publishes a release with that tag. Every run is a new version, so a previous release is never replaced. Untick "Publish a GitHub release" to build only; nothing is committed or tagged and the files are kept as a build artifact.
 
-The release gets the NSIS installer, the MSI, a portable `CipherIsland_<version>_x64-portable.exe`, a `CipherIsland_<version>_x64-portable.zip` with the same exe, and `SHA256SUMS.txt`. Bump `version` in `tauri.conf.json` before releasing again; a second run with the same version updates the existing release. The files aren't code-signed, so SmartScreen will warn on first run.
+A pushed tag still works and uses the tag as the version. If the branch is protected against pushes from Actions, the commit step fails; allow it or release from a tag instead.
+
+The release gets the NSIS installer, the MSI, a portable `CipherIsland_<version>_x64-portable.exe`, a `CipherIsland_<version>_x64-portable.zip` with the same exe, and `SHA256SUMS.txt`. The files aren't code-signed, so SmartScreen will warn on first run.
 
 If the publish step fails with a permissions error, open the repository's Settings, then Actions, then General, and set "Workflow permissions" to "Read and write permissions".
 
