@@ -1,6 +1,6 @@
 [package]
 name = "cipherisland"
-version = "0.1.0"
+version = "0.2.0"
 description = "A Dynamic Island-style activity pill for Windows"
 edition = "2021"
 rust-version = "1.77"
